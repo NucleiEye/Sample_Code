@@ -120,21 +120,11 @@ local function equip(nam, parent, mag, num)
 	if mag:FindFirstChild(nam) or keyBinds.equippedSkills[plr.Name][nam] ~= nil then
 		plr.PlayerGui.Tools[keyBinds.equippedSkills[plr.Name][nam]].Skill.Text = "Empty"
 		keyBinds.equippedSkills[plr.Name][parent.Name] = nil
+		mag[nam]:Destroy()
 	end
 	local skill = game.ReplicatedStorage.Assets.Skills:FindFirstChild(nam):Clone() or nil
 	skill.Parent = mag
 	plr.PlayerGui.InventoryClone.Top.BackFrame:Destroy()
-	for k, v in pairs (keyBinds.equippedSkills[plr.Name]) do
-		if v == num and v ~= nil then
-			for magic, skills in pairs (magicNames) do
-				for _, skillName in ipairs (skills) do
-					if skillName == k and char.Magics[magic]:FindFirstChild(skillName) then
-						char:FindFirstChild("Magics")[magic][skillName]:Destroy()
-					end
-				end
-			end
-		end
-	end
 	game.ReplicatedStorage.Remotes.SkillEquipping:FireServer(parent.Name, num)
 	keyBinds.equippedSkills[plr.Name][parent.Name] = num
 	plr.PlayerGui.Tools[num].Skill.Text = parent.Text
