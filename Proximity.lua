@@ -67,27 +67,24 @@ end
 --// Handle interaction for that proximity prompt
 function customProximityPrompt:Interacted(funct, args)
     if type(funct) ~= "function" then warn("Interaction for proximity prompts must be given a function") return end
-    local functionArgs = args ~= nil and table.unpack(args) or nil
     self.__signal:Connect(function ()
-        funct(functionArgs)
+        funct(table.unpack(args))
     end)
 end
 
 --// Handle what occurs when interaction ends
 function customProximityPrompt:InteractionEnded(funct, args)
     if type(funct) ~= "function" then warn("Interaction for proximity prompts must be given a function") return end
-    local functionArgs = args ~= nil and table.unpack(args) or nil
     self.__InteractionEnded:Connect(function ()
-        funct(functionArgs)
+        funct(table.unpack(args))
     end)
 end
 
 --// When you come out of the range of the proximity prompt
 function customProximityPrompt:RangeLeaving(funct, args)
-    if type(funct) ~= "function" then warn("Interaction for proximity prompts must be given a function") return end
-    local functionArgs = args ~= nil and table.unpack(args) or nil
+    if type(funct) ~= "function" then warn("Range Leaving for proximity prompts must be given a function") return end
     self.__OutsideSignal:Connect(function ()
-        funct(functionArgs)
+        funct(table.unpack(args))
         self.gui.Enabled = false
     end)
 end
@@ -95,10 +92,9 @@ end
 --// When you enter the range of the proximity prompt
 function customProximityPrompt:RangeEntering(funct, args)
     if type(funct) ~= "function" then warn("Interaction for proximity prompts must be given a function") return end
-    local functionArgs = args ~= nil and table.unpack(args) or nil
     self.__EnterSignal:Connect(function ()
         self.gui.Enabled = true
-        funct(functionArgs)
+        funct(table.unpack(args))
     end)
 end
 
