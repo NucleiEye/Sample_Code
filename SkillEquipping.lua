@@ -73,21 +73,15 @@ local function transparencyTween(objects, mode)
     local tweens = {}
     local cleanUpConnection
 
-    --// If the mode is to make the elements transparent then make them transparent
-    if mode == "Transparency" then
-        for _, obj in ipairs (objects) do
-            obj.ZIndex = -1
-            local tween = tweenService:Create(obj, TweenInfo.new(0.8), {BackgroundTransparency = 1, TextTransparency = 1})
-            tween:Play()
-            tweens[#tweens + 1] = tween
-        end
-    else --// If the mode is anything else then the elements will be made visible
-        for _, obj in ipairs (objects) do
-            obj.ZIndex = 1
-            local tween = tweenService:Create(obj, TweenInfo.new(0.8), {BackgroundTransparency = 0.55, TextTransparency = 0})
-            tween:Play()
-            tweens[#tweens + 1] = tween
-        end
+    --// If the mode is to make the elements transparent then make them transparent; otherwise make the elements have properties given
+    for _, obj in ipairs (objects) do
+	local backTransparency, textTransparency = 0, 0 --// background transparency and text transparency to tween to
+	obj.ZIndex = ( mode == "Transparency" and -1 ) or 1
+	backTransparency = ( mode == "Transparency" and 1 ) or 0.55
+	textTransparency = ( mode == "Transparency" and 1 ) or 0
+	local tween = tweenService:Create(obj, TweenInfo.new(0.8), {BackgroundTransparency = backTransparency, TextTransparency = textTransparency})
+        tween:Play()
+        tweens[#tweens + 1] = tween
     end
 
     --// Tween Cleanup
@@ -129,15 +123,12 @@ local interactions = {
 
         --// Insert ui to respective tables based off the category they fall in
         for name, category in pairs (buttonTypes) do
-            if category == "Magic" then --// If it falls under the category of Magic then it'll be added to tableOfTransparency
-                tableOfTransparency[#tableOfTransparency + 1] = ( gui.Top:FindFirstChild(name) and gui.Top[name] ) or ( gui.Bottom:FindFirstChild(name) and gui.Bottom[name] )
-            else --// If it doesn't fall under the category of Magic then it'll be added to tableOfVisibility
-                tableOfVisibility[#tableOfVisibility + 1] = ( gui.Top:FindFirstChild(name) and gui.Top[name] ) or ( gui.Bottom:FindFirstChild(name) and gui.Bottom[name] )
-            end
+	    local chooseTable = ( category == "Magic" and tableOfTransparency ) or tableOfVisibility
+	    chooseTable[#chooseTable + 1] = ( gui.Top:FindFirstChild(name) and gui.Top[name] ) or ( gui.Bottom:FindFirstChild(name) and gui.Bottom[name] )
         end
 
         --// Tween Properties of Table of Transparency
-		transparencyTween(tableOfTransparency, "Transparency")
+	transparencyTween(tableOfTransparency, "Transparency")
 
         --// Tween Properties of Table of Table of Visibility
         transparencyTween(tableOfVisibility)
@@ -254,11 +245,11 @@ local interactions = {
 local function buttonInteractionCheck()
     local gui = plr.PlayerGui:FindFirstChild("InventoryClone")
 	for _, connection in ipairs (precedingConnections) do
-		if type(connection) == "userdata" then
+		if typeof(connection) == "RBXScriptConnection" then
 			connection:Disconnect()
 		end
 	end
-	for _, interface in pairs (gui:GetDescendants()) do
+	for _, interface in ipairs (gui:GetDescendants()) do
 		if interface:IsA("TextButton") and interface.Parent ~= "BackFrame" and interface.Parent:IsA("Frame") then
             local connection
 			connection = interface.MouseButton1Down:Connect(function()
