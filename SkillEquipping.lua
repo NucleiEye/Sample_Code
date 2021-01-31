@@ -21,24 +21,24 @@ local debounces = {
 }
 local buttonTypes = {
     --// Magics
-    Flame = "Magic",
-    Wall = "Magic",
-    FrostTusk = "Magic",
-    Thunderbolt = "Magic",
+    Flame               = "Magic",
+    Wall                = "Magic",
+    FrostTusk           = "Magic",
+    Thunderbolt         = "Magic",
 
     --// Skills
-    BlazingPassion = "Skill",
-    MagnificientFlame = "Skill",
-    FlamingShot = "Skill",
-    UltimateAegis = "Skill",
-    Void = "Skill",
-    AegisPummel = "Skill",
-    FrostBite = "Skill",
-    IcicleCrash = "Skill",
-    IceField = "Skill",
-    ArmorOfThunderGod = "Skill",
-    ElectricLunge = "Skill",
-    ThunderTaze = "Skill",
+    BlazingPassion      = "Skill",
+    MagnificientFlame   = "Skill",
+    FlamingShot         = "Skill",
+    UltimateAegis       = "Skill",
+    Void                = "Skill",
+    AegisPummel         = "Skill",
+    FrostBite           = "Skill",
+    IcicleCrash         = "Skill",
+    IceField            = "Skill",
+    ArmorOfThunderGod   = "Skill",
+    ElectricLunge       = "Skill",
+    ThunderTaze         = "Skill",
 
     --// Back Button
     Back = "Back"
