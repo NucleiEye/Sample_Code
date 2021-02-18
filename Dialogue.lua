@@ -1,37 +1,16 @@
---[[ Key for my sped brain:
-Choice1Clicked_1 -> Choice "1" means that that's the button order 1 = first button
-Choice1Clicked_1 -> Choice1Clicked_ "1" means that that's the round
-------------------------------------------------------------------------------------
-
-Choice1Clicked_2_From2 -> Choice "1" means same thing
-Choice1Clicked_2_From2 -> Choice1Clicked_ "2" means that you're on the next text round
-Choice1Clicked_2_From2 -> Choice1Clicked_2_From "2" means that you clicked two on the previous round
-----------------------------------------------------------------------------------------------------
-
-Choice1_1 -> Choice "1" represents the button number in order; 1 = first button
-Choice1_1 -> Choice1_ "1" represents the text round; so this is the first text round 1st choice
------------------------------------------------------------------------------------------------
-
-Choice1_2_From2	 -> Choice "1" represents the button number in orer; 1 = first button
-Choice1_2_From2	 -> Choice1_2_From "2" represents the button that was pressed in the last round;
-				  In this situation, the button pressed was 2
-Choice1_2_From2	 -> Choice1_ "2" represents the round of text
--------------------------------------------------------------------------------------------
-
-Options -> Option1 = quest path
-quest path = {} in this table, insert the dialogue, for everything starting the 2nd selection aka 3rd text round
-CAN be stacked or changed in mid-script but as of right now this system will only support up to 3 rounds of text
-]]--
-
---// Future note: make quest indices more specific for better recognition and so my sped mind won't lose track of what everything is
+--[[
+Bugs in question -> why the heck is there 2 registrations of a click
+Details: on the last click self:Update() gets fired twice; reason why seems to be 
+the line that changes the self.nextPath
+]]
 
 --// Variables
 local zoneQuests = {
 	Desert = {
-		"CollectFood",
-		"CollectWater",
-		"Assasination",
-		"TeamFight"
+		"collectFood",
+		"collectWater",
+		"assasination",
+		"teamFight"
 	}
 }
 
@@ -39,7 +18,7 @@ local zoneQuests = {
 local signals = require(script.Parent.Signals)
 
 --// Functions
-local function stopDialogue(gui, waitTime)
+local function stopDialogue(gui, waitTime) --// stop dialogue/destroy ui clean up connectionsn
 	--// Create and fire a signal
 	local stopSignal = signals.New()
 	local stopConnection
@@ -58,141 +37,180 @@ local function stopDialogue(gui, waitTime)
 	stopSignal:Fire()
 end
 
---// Eventually use a module for specific zone dialogues; rn testing purposes only
---// Quest Dialogues
+--// Dialogue; put in a seperate module in the future
 local questDialogue = {
 	Desert = {
-		CollectFood = {
-			MaxRounds = 3, --// Maximum amount of text dialogue rounds
+		collectFood = {
+			maxRounds = 3, --// Number of rounds maximum
 
-			--// Quest Paths
-			Option1				= nil,
-			Option2 			= "canIHelp",
-			Option3				= "deadBodySeen",
+			--// Initiation Path when interaction initiates
+			initiationPath = {
+				--// Paths for respectively clicked options
+				futurePaths = {"skillIssue", "helpPart1", "storyPart1"},
 
-			--// Interaction 1
-			Dialogue1                       = "So... hungry... Help... I  can't survive much longer",
-			Choice1_1                       = "That's a skill issue.",
-			Choice2_1                       = "That sucks... is there any way I can help?",
-			Choice3_1                       = "I always thought you could just eat the cacti",
+				--// NPC text
+				textForNPC = "So... hungry... Help... I  can't survive much longer",
 
-			--// Interaction 2
-			Choice1Clicked_1                = function(gui) --// Dialogue Ends
-				stopDialogue(gui)
-				return "Wow... I guess... I'll starve now"
-			end,
-			Choice2Clicked_1                = "I think I may have seen a market somewhere around this area... could you get me some food?",
-			Choice3Clicked_1                = "One of my people thought in a similar fashion... do you see that area below the cliff?",
-
-			--// Interaction 2 Choice 2 Interaction Options
-			Choice1_2_From2			= "Sure!",
-			Choice2_2_From2			= "Nah, I'm good.",
-
-			--// Interaction 2 Choice 3 Interaction Options
-			Choice1_2_From3			= "Yea I saw it... I thought the body came from somethin else",
-			Choice2_2_From3			= "No, I didn't see it? Mind showing me?",
-
-			--// Can I help dialogue path
-			canIHelp 						= {
-				Choice1Clicked_2_From1 	= "Thank you so much! c:",
-				Choice2Clicked_2_From2	= "Unfortunate... thank you for your time though :c"
+				--// Option Texts
+				Option1 = "That's a skill issue.",
+				Option2 = "That sucks... is there any way I can help?",
+				Option3 = "I always thought you could just eat the cacti."
 			},
 
-			--// Dead body seen path
-			deadBodySeen			= {
-				Choice1Clicked_2_From1	= "Well it for sure didn't.",
-				Choice2Clicked_2_From2	= "Here it is..."
-			}
-		},
+			----------------------------------------------------------------------------------------------
+
+			--// Skill Issue Path
+			skillIssue = {
+				--// NPC text; Terminate Dialogue
+				textForNPC = function (gui)
+					stopDialogue(gui)
+					return "Wow... I guess... I'll starve now"
+				end
+			},
+
+			----------------------------------------------------------------------------------------------
+
+			--// Help Part1 Path
+			helpPart1 = {
+				--// Paths for respectively clicked options
+				futurePaths = {"helpAccept", "helpRejection"},
+
+				--// NPC text
+				textForNPC = "I think I may have seen a market somewhere around this area... could you get me some food?",
+
+				--// Option Texts
+				Option1 = "Sure! This will be a piece of cake!! Get it? Food... cake.. ahahah",
+				Option2 = "Eh, I don't think I have the time I'm so very sorry."
+			},
+
+			--// Help Accepted Path
+			helpAccept = {
+				--// NPC text
+				textForNPC = "Thank you so much! c: **Stomach groans** I need you to hurry good sir... please",
+			},
+
+			--// Help Rejected Path
+			helpRejection = {
+				--// NPC text
+				textForNPC = "Unfortunate... thank you for your time though :c"
+			},
+
+			----------------------------------------------------------------------------------------------
+
+			--// Story Part1 Path
+			storyPart1 = {
+				--// Future Paths
+				futurePaths = {"alreadySeen", "notSeen"},
+
+				--// NPC text
+				textForNPC = "One of my people thought in a similar fashion... do you see that area below the cliff?",
+
+				--// Option Texts
+				Option1 = "Yea I saw it... I thought the body came from somethin else",
+				Option2 = "No, I didn't see it? Mind showing me?"
+			},
+
+			--// Already Seen Path
+			alreadySeen = {
+				--// NPC text
+				textForNPC = "Well it for sure didn't."
+			},
+
+			--// Not Seen path
+			notSeen = {
+				--// NPC text
+				textForNPC = function()
+					--// Perform cutscene to body here
+					return "Here it is..."
+				end
+			},
+		}
 	}
 }
 
---// Dialogue Class
+--// Dialogue Handling Class
 local dialogue = {}
 dialogue.__index = dialogue
 
---// Create a new Dialogue/choose a quest line
-function dialogue.New(zone, gui) --// Zone -> the zone that the player is in; gui -> 
+--// Initiate a new Dialogue
+function dialogue.New(zone, gui, character) --// Zone -> String of Zone || Gui -> Element containing elements of options and text
 	--// Variables
 	--// Note: Uncomment following 2 lines of code once all those quests have dialogues
 	--local questCategory = ( type(zone) == "string" and zoneQuests[zone] ) or warn("Zone argument must be a string")
 	--local quest = questCategory[math.random(#questCategory)] -- choose a random quest from the category
-	local quest = "CollectFood"
-	--// Properties
+	local quest = "collectFood"
+
+	--// Define self and add properties
 	local self = setmetatable({
-		chosenQuest = quest, -- string of the questline
-		questZone = zone, -- the zone the quest is in
-		frame = gui, -- the frame that the quest ui will be in
-		textRound = 1, -- the round of text the dialogue is at
-		selectedOption = nil, -- the selected option of the player
-		path = nil -- the dialogue path the player chooses
+		character = character,
+		chosenQuest = quest, --// Quest chosen for the individual
+		questZone = zone, --// Zone of the quest
+		currentRound = 1, --// Round of Text
+		elementContainer = gui, --// Container of the elements for the dialogue handling
+		nextPath = nil --// Next Path Available
 	}, dialogue)
+
+	--// Update and initiate dialogue
+	self:Update()
+
+	--// Return the value
 	return self
 end
 
---// Click detection for gui/updating text
-function dialogue:Update(npcText)
+function dialogue:Update()
 	--// Variables
-	local initiationDialogue = questDialogue[self.questZone][self.chosenQuest]
-	local mainTextFrame = self.frame.MainText
-	local options = {self.frame.Option1, self.frame.Option2, self.frame.Option3}
+	local elementContainer = self.elementContainer
+	local currentRound = self.currentRound
+	local dialogueLines = questDialogue[self.questZone][self.chosenQuest]
+	local currentChosenPath = ( self.nextPath and dialogueLines[self.nextPath] ) or ( dialogueLines.initiationPath )
+	local mainTextFrame = elementContainer.MainText
+	local options = {elementContainer.Option1, elementContainer.Option2, elementContainer.Option3}
+	local maxRounds = dialogueLines.maxRounds
+	local questScreenGUI = elementContainer.Parent
 
-	--// If the frmae doesn't exist then break off of the recursive function
-	if not self.frame then return end
+	--// Temporary fix to bug bc im annoyed :)
+	if currentRound > maxRounds then return end
 
-	--// Set Text
-	if not npcText then
-		mainTextFrame.Text = ( initiationDialogue["Dialogue" .. self.textRound] ) or ( "No valid text found for the main text frame." )
-	else
-		mainTextFrame.Text = npcText
-	end
+	--// Text for npc is the chosen path's text; if nothing is found then filler text given
+	local npcText = ( currentChosenPath.textForNPC ) or ( "No text found for the npc." )
+	npcText = ( type(npcText) == "function" and npcText(questScreenGUI) ) or ( npcText )
 
-	--// If max rounds met then delete dialogue and break off of the recursive function
-	if self.textRound == initiationDialogue.MaxRounds then
+	--// If you can't find an existing container then break off the recursive function
+	if not elementContainer then return end
+
+	--// Set the text
+	mainTextFrame.Text = npcText
+
+	--// If the max round number has been met then break off the recursive function
+	if currentRound == maxRounds then
 		wait(1.5)
-		self.frame.Parent:Destroy()
+		questScreenGUI:Destroy()
 		return
 	end
 
-	--// Button Down Click; text for buttons
-	for optionNum, option in ipairs (options) do
+	--// Loop through options to set their text and set their interaction events
+	for optionNumber, option in ipairs (options) do
 		--// Variables
-		local lastClicked = ( self.selectedOption and "_From" .. self.selectedOption ) or ( "" )
-		local index = "Choice" .. optionNum .. "_" .. self.textRound .. lastClicked
-		local optionConnection
+		local optionClickConnection
 
-		--// Set Text
-		option.Text = ( initiationDialogue[index] ) or ( "N/A" )
+		--// Set Text of Option
+		option.Text = ( currentChosenPath[option.Name] ) or ( "N/A" )
 
-		--// On button click
-		optionConnection = option.MouseButton1Down:Connect(function ()
-			if self.textRound == initiationDialogue.MaxRounds then return end --// check to fix bug temporarily
+		--// Click Detection
+		optionClickConnection = option.MouseButton1Click:Connect(function ()
+			--// Update Path for next round of text
+			self.nextPath = currentChosenPath.futurePaths[optionNumber]
 
-			--// Update Selected Options
-			self.selectedOption = optionNum
-			if self.textRound >= 2 then
-				lastClicked = ( self.selectedOption and "_From" .. self.selectedOption ) or ( "" )
-			else --// if text round isn't greater then or equal to 2 then text round is equal to 1 so choose a path
-				self.path = initiationDialogue[option.Name]
-			end
+			--// Text round increased accordingly
+			self.currentRound = self.currentRound + 1
 
-			--// Variables
-			local mainDialogueIndex = "Choice" .. optionNum .. "Clicked_" .. self.textRound .. lastClicked
-			self.dialogueGetter = ( self.textRound >= 2 and initiationDialogue[self.path[mainDialogueIndex]] ) or ( mainDialogueIndex )
-			local functionGetter = ( initiationDialogue[self.path] and initiationDialogue[self.path][mainDialogueIndex] ) or initiationDialogue[mainDialogueIndex]
+			--// Recursively call :Update with the text for the npc to say
+			self:Update()
 
-			--// Update Dialogue
-			functionGetter = ( type(functionGetter) == "function" and  functionGetter(self.frame.Parent) ) or functionGetter
-
-				--// Increment text round
-			self.textRound = self.textRound + 1
-
-			--// Recurse
-			self:Update(functionGetter)
-
-			--// Clean up
-			optionConnection:Disconnect()
-			optionConnection = nil
+			--// Clean up connections
+			optionClickConnection:Disconnect()
+			optionClickConnection = nil
+			return
 		end)
 	end
 end
