@@ -202,7 +202,7 @@ function dialogue:Update()
 			self.nextPath = currentChosenPath.futurePaths[optionNumber]
 
 			--// Text round increased accordingly
-			self.currentRound = self.currentRound + 1
+			self.currentRound = self.currentRound + 1 -- bug lowers currentRound variable value for some reason so not caching currentRound for this until bug fix
 
 			--// Recursively call :Update with the text for the npc to say
 			self:Update()
