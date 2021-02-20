@@ -230,7 +230,6 @@ function dialogue:Update()
 			--// Clean up connections
 			optionClickConnection:Disconnect()
 			optionClickConnection = nil
-			return
 		end)
 	end
 end
