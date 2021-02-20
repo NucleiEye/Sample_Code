@@ -1,9 +1,3 @@
---[[
-Bugs in question -> why the heck is there 2 registrations of a click
-Details: on the last click self:Update() gets fired twice; reason why seems to be 
-the line that changes the self.nextPath
-]]
-
 --// Variables
 local zoneQuests = {
 	Desert = {
@@ -27,6 +21,30 @@ local function stopDialogue(gui, waitTime) --// stop dialogue/destroy ui clean u
 		local waitPeriod = ( waitTime ) or ( 1.5 )
 		wait(waitPeriod)
 		gui:Destroy()
+
+		--// Clean up
+		stopConnection:Disconnect()
+		stopSignal:Destroy()
+		stopConnection = nil
+		stopSignal = nil
+	end)
+	stopSignal:Fire()
+end
+
+local function dialogueQuestGive(gui, waitTime, quest, character)
+	--// Variables
+	local replicatedStorage = game.ReplicatedStorage
+	local questHandler = require(replicatedStorage.QuestSystem.QuestHandling)
+
+	--// Create and fire a signal
+	local stopSignal = signals.New()
+	local stopConnection
+	stopConnection = stopSignal:Connect(function()
+		--/// Wait and destroy
+		local waitPeriod = ( waitTime ) or ( 1.5 )
+		wait(waitPeriod)
+		gui:Destroy()
+		questHandler.GetQuest(quest, character)
 
 		--// Clean up
 		stopConnection:Disconnect()
@@ -86,13 +104,19 @@ local questDialogue = {
 			--// Help Accepted Path
 			helpAccept = {
 				--// NPC text
-				textForNPC = "Thank you so much! c: **Stomach groans** I need you to hurry good sir... please",
+				textForNPC = function (gui, quest, character)
+					dialogueQuestGive(gui, nil, quest, character)
+					return "Thank you so much! c: **Stomach groans** I need you to hurry good sir... please"
+				end,
 			},
 
 			--// Help Rejected Path
 			helpRejection = {
 				--// NPC text
-				textForNPC = "Unfortunate... thank you for your time though :c"
+				textForNPC = function(gui, quest, character)
+					dialogueQuestGive(gui, nil, quest, character)
+					return "Unfortunate :c, I was hoping I could get a meal for once :cc"
+				end,
 			},
 
 			----------------------------------------------------------------------------------------------
@@ -168,12 +192,12 @@ function dialogue:Update()
 	local maxRounds = dialogueLines.maxRounds
 	local questScreenGUI = elementContainer.Parent
 
-	--// Temporary fix to bug bc im annoyed :)
+	--// Temporary fix to bug; check if the current round exceeds the max amount of rounds
 	if currentRound > maxRounds then return end
 
 	--// Text for npc is the chosen path's text; if nothing is found then filler text given
 	local npcText = ( currentChosenPath.textForNPC ) or ( "No text found for the npc." )
-	npcText = ( type(npcText) == "function" and npcText(questScreenGUI) ) or ( npcText )
+	npcText = ( type(npcText) == "function" and npcText(questScreenGUI, self.chosenQuest, self.character) ) or ( npcText )
 
 	--// If you can't find an existing container then break off the recursive function
 	if not elementContainer then return end
@@ -182,11 +206,7 @@ function dialogue:Update()
 	mainTextFrame.Text = npcText
 
 	--// If the max round number has been met then break off the recursive function
-	if currentRound == maxRounds then
-		wait(1.5)
-		questScreenGUI:Destroy()
-		return
-	end
+	if currentRound == maxRounds then return end
 
 	--// Loop through options to set their text and set their interaction events
 	for optionNumber, option in ipairs (options) do
@@ -202,7 +222,7 @@ function dialogue:Update()
 			self.nextPath = currentChosenPath.futurePaths[optionNumber]
 
 			--// Text round increased accordingly
-			self.currentRound = self.currentRound + 1 -- bug lowers currentRound variable value for some reason so not caching currentRound for this until bug fix
+			self.currentRound = self.currentRound + 1
 
 			--// Recursively call :Update with the text for the npc to say
 			self:Update()
